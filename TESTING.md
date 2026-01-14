@@ -54,9 +54,39 @@ curl -X POST "https://your-site.com/wp-json/ucp/v1/checkout-sessions" \
 
 ---
 
-## 5. Troubleshooting
-If things aren't working as expected:
-1. **Check Logs**: Look at `/wp-content/debug.log`. The plugin logs all major events starting with `WooUCP:`.
-2. **Permalinks**: If endpoints return 404, re-save your permalink settings.
-3. **Product IDs**: Ensure the Product IDs you are sending in the request exist in your WooCommerce store.
-4. **JWT Library**: Ensure `includes/jwt/src/` contains the extracted files from `firebase/php-jwt`.
+### 4. Product Discovery (AI-Friendly)
+Verify that the AI-specific product feed is working.
+
+**Request:**
+```bash
+curl -X GET "https://your-site.com/wp-json/ucp/v1/products"
+```
+
+**Expected Response (200 OK):**
+```json
+{
+  "products": [
+    {
+      "id": 123,
+      "title": "Example Product",
+      "description": "Short description without HTML tags...",
+      "price": "19.99",
+      "currency": "USD",
+      "url": "https://your-site.com/product/example",
+      "image": "https://your-site.com/wp-content/uploads/image.jpg",
+      "stock": "instock"
+    }
+  ]
+}
+```
+
+---
+
+## 🛠 Troubleshooting
+- **403 Forbidden**: Capability is disabled in **WooCommerce > UCP Settings**.
+- **401 Unauthorized**: Signature is invalid or `UCP-Agent` header is missing.
+- **404 Not Found**: Permalinks need flushing (use the button in UCP Settings).
+- **400 Bad Request**: Stock is out or Order Total exceeds limit.
+- **Check Logs**: Look at `/wp-content/debug.log`. The plugin logs all major events starting with `WooUCP:`.
+- **Product IDs**: Ensure the Product IDs you are sending in the request exist in your WooCommerce store.
+- **JWT Library**: Ensure `includes/jwt/src/` contains the extracted files from `firebase/php-jwt`.

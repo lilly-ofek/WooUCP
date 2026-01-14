@@ -13,29 +13,27 @@ This plugin enables WooCommerce stores to support the Universal Commerce Protoco
 - **Security First**: Cryptographic JWS/JWK signature verification.
 
 ---
-
-## � Installation & Setup
-
-### 1. Manual Dependency Setup
-Since this plugin requires `firebase/php-jwt`, and you have manually installed it:
-- Ensure the library is located at: `includes/jwt/src/`
-- The plugin automatically detects and loads the library from this path.
+### 1. Key Features
+- **UCP Discovery**: Manifest available at `/.well-known/ucp`.
+- **Product Discovery**: Clean, AI-friendly product feed at `/wp-json/ucp/v1/products`.
+- **Secure Checkout**: Signature verification (JWT) with dynamic key discovery.
+- **Idempotency**: Prevents double orders using a unique key system.
+- **Agent Insights**: View AI agent details directly in the WooCommerce Order Edit page.
+- **Security Controls**: Agent Whitelist, Maximum Order Total limit, and Capability Toggles.
+- **Advanced Flow**: Support for WooCommerce **Coupons** and stock validation.
 
 ### 2. Configuration
-- **Settings Page**: Go to **WooCommerce > UCP Settings** to manage the plugin.
-- **Debug Mode**: Enable this to log API events and errors (requires `WP_DEBUG`).
-- **Development Mode**: Enable this to bypass full JWT verification.
-- **Security Limits**: Set a **Max Order Total** to limit financial exposure from AI agents.
+- **Settings Page**: Go to **WooCommerce > UCP Settings** (or click "Settings" on the Plugins page).
+- **Security Limits**: Set a **Max Order Total** and an **Agent Whitelist** for safety.
+- **Capability Toggles**: Enable only what you need (Checkout/Discovery) for better performance.
+- **Debug Mode**: Detailed logging to `debug.log`.
 
 ### 3. Payment Gateway
-- Go to **WooCommerce > Settings > Payments**.
-- Ensure **UCP Payment** is enabled.
+- Go to **WooCommerce > Settings > Payments`.
+- Enable the **UCP Payment** gateway to allow the plugin to process AI orders.
 
----
-
-## 🧪 Testing
-For a comprehensive guide on how to test the plugin, please refer to:
-� **[TESTING.md](file:///c:/Users/Administrator/Documents/GitHub/WooUCP/TESTING.md)**
+### 4. Testing
+Refer to [TESTING.md](file:///c:/Users/Administrator/Documents/GitHub/WooUCP/TESTING.md) for detailed cURL examples for discovery, shipping rates, and checkout.
 
 ### Quick Discovery Check
 ```bash

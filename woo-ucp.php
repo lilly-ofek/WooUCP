@@ -83,4 +83,12 @@ if (ucp_woo_check_woocommerce()) {
         \WooUCP\Main::instance();
     }
     add_action('plugins_loaded', 'ucp_woo_init');
+
+    // Add settings link to plugins page
+    add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'ucp_woo_add_settings_link');
+    function ucp_woo_add_settings_link($links) {
+        $settings_link = '<a href="admin.php?page=ucp-settings">' . __('Settings', 'ucp-for-woocommerce') . '</a>';
+        array_unshift($links, $settings_link);
+        return $links;
+    }
 }
