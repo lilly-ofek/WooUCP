@@ -53,14 +53,17 @@ if (ucp_woo_check_woocommerce()) {
     } 
     // Fallback: Load manually installed JWT library
     elseif (file_exists(UCP_WOO_PATH . 'includes/jwt/src/JWT.php')) {
+        // Load interface first, before classes that implement it
+        require_once UCP_WOO_PATH . 'includes/jwt/src/JWTExceptionWithPayloadInterface.php';
+        // Load exception classes that implement the interface
         require_once UCP_WOO_PATH . 'includes/jwt/src/BeforeValidException.php';
-        require_once UCP_WOO_PATH . 'includes/jwt/src/CachedKeySet.php';
         require_once UCP_WOO_PATH . 'includes/jwt/src/ExpiredException.php';
+        require_once UCP_WOO_PATH . 'includes/jwt/src/SignatureInvalidException.php';
+        // Load other classes
+        require_once UCP_WOO_PATH . 'includes/jwt/src/Key.php';
         require_once UCP_WOO_PATH . 'includes/jwt/src/JWK.php';
         require_once UCP_WOO_PATH . 'includes/jwt/src/JWT.php';
-        require_once UCP_WOO_PATH . 'includes/jwt/src/JWTExceptionWithPayloadInterface.php';
-        require_once UCP_WOO_PATH . 'includes/jwt/src/Key.php';
-        require_once UCP_WOO_PATH . 'includes/jwt/src/SignatureInvalidException.php';
+        require_once UCP_WOO_PATH . 'includes/jwt/src/CachedKeySet.php';
     }
 
     // Activation hook

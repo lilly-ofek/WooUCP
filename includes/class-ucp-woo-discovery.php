@@ -63,6 +63,8 @@ class Discovery {
                 ]
             ]
         ];
+    }
+
     /**
      * Get enabled capabilities based on settings
      * 
