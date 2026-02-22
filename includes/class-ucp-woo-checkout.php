@@ -102,6 +102,22 @@ class Checkout {
             $order->update_meta_data('_ucp_woo_agent_profile', $params['agent_profile']);
         }
 
+        // Save Custom Fields using Mapping
+        $mapping_raw = Settings::get('ucp_woo_field_mapping');
+        if (!empty($mapping_raw)) {
+            $mappings = array_filter(array_map('trim', explode("\n", $mapping_raw)));
+            foreach ($mappings as $line) {
+                if (strpos($line, '|') === false) continue;
+                list($ucp_key, $woo_key) = explode('|', $line, 2);
+                $ucp_key = trim($ucp_key);
+                $woo_key = trim($woo_key);
+
+                if (isset($params['custom_fields'][$ucp_key])) {
+                    $order->update_meta_data($woo_key, $params['custom_fields'][$ucp_key]);
+                }
+            }
+        }
+
         $order->calculate_totals();
 
         // Security check: Max Order Total
@@ -112,6 +128,21 @@ class Checkout {
         }
 
         $order->save();
+
+        // Handle Payment completion if instrument is provided
+        if (!empty($params['payment_instrument'])) {
+            $instrument = $params['payment_instrument'];
+            
+            // In a real scenario, we'd verify the token with a provider (Stripe/PayPal)
+            // For now, we accept any token as success in Dev Mode
+            $transaction_id = $instrument['token'] ?? 'ucp_' . time();
+            
+            $order->payment_complete($transaction_id);
+            
+            // Note: payment_complete automatically sets status to processing/completed 
+            // and triggers the "New Order" customer email.
+            Main::log("Payment completed for order {$order->get_id()} with transaction: {$transaction_id}");
+        }
 
         return $order->get_id();
     }

@@ -84,7 +84,7 @@ class API {
             return new \WP_REST_Response(['error' => 'Invalid signature'], 401);
         }
 
-        $params = $request->get_json_params();
+        $params = $security->sanitize_data($request->get_json_params());
         $idempotency_header = $request->get_header('idempotency-key');
         if ($idempotency_header) {
             $params['idempotency_key'] = $idempotency_header;
@@ -129,8 +129,9 @@ class API {
         $data = [];
 
         foreach ($products as $product) {
-            $data[] = [
+            $product_data = [
                 'id' => $product->get_id(),
+                'type' => $product->get_type(),
                 'title' => $product->get_name(),
                 'description' => wp_strip_all_tags($product->get_short_description() ?: $product->get_description()),
                 'price' => $product->get_price(),
@@ -139,6 +140,25 @@ class API {
                 'image' => wp_get_attachment_url($product->get_image_id()),
                 'stock' => $product->get_stock_status(),
             ];
+
+            // Add variations if it's a variable product
+            if ($product->is_type('variable')) {
+                $variations = $product->get_available_variations();
+                $product_data['variations'] = [];
+                
+                foreach ($variations as $variation_data) {
+                    $variation_obj = wc_get_product($variation_data['variation_id']);
+                    $product_data['variations'][] = [
+                        'id' => $variation_data['variation_id'],
+                        'attributes' => $variation_data['attributes'],
+                        'price' => $variation_data['display_price'],
+                        'stock' => $variation_obj->get_stock_status(),
+                        'sku' => $variation_data['sku'],
+                    ];
+                }
+            }
+
+            $data[] = $product_data;
         }
 
         return new \WP_REST_Response(['products' => $data], 200);

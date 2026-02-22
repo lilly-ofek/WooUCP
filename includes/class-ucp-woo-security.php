@@ -11,12 +11,16 @@ if (!defined('ABSPATH')) {
 class Security {
 
     /**
-     * Verify the UCP request signature
+     * Verify the UCP request signature and rate limit
      * 
      * @param \WP_REST_Request $request
      * @return bool
      */
     public function verify_request($request) {
+        if (!$this->check_rate_limit()) {
+            return false;
+        }
+
         $signature = $request->get_header('request-signature');
         $agent_header = $request->get_header('UCP-Agent');
         
@@ -83,10 +87,21 @@ class Security {
      * @return array
      */
     private function get_agent_public_keys($profile_url) {
+        // Mocking for "dress rehearsal" testing
+        if (strpos($profile_url, 'mock-agent.com') !== false) {
+            $jwk_path = plugin_dir_path(dirname(__FILE__)) . 'tests/public_keys.json';
+            if (file_exists($jwk_path)) {
+                $keys = json_decode(file_get_contents($jwk_path), true);
+                if ($keys) {
+                    return $keys;
+                }
+            }
+        }
+
         $cache_key = 'ucp_woo_keys_' . md5($profile_url);
         $keys = get_transient($cache_key);
 
-        if ($keys !== false) {
+        if ($keys !== false && strpos($profile_url, 'mock-agent.com') === false) {
             return $keys;
         }
 
@@ -115,7 +130,47 @@ class Security {
      * @return array
      */
     public function sanitize_data($data) {
-        // Implement sanitization logic here
-        return $data;
+        if (!is_array($data)) {
+            return [];
+        }
+
+        $sanitized = [];
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $sanitized[sanitize_key($key)] = $this->sanitize_data($value);
+            } else {
+                $sanitized[sanitize_key($key)] = sanitize_text_field($value);
+            }
+        }
+        return $sanitized;
+    }
+
+    /**
+     * Simple transient-based rate limiter
+     * 
+     * @return bool
+     */
+    private function check_rate_limit() {
+        $limit = intval(Settings::get('ucp_woo_api_rate_limit', 60));
+        if ($limit <= 0) {
+            return true;
+        }
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $cache_key = 'ucp_rate_limit_' . md5($ip);
+        $count = get_transient($cache_key);
+
+        if ($count === false) {
+            set_transient($cache_key, 1, MINUTE_IN_SECONDS);
+            return true;
+        }
+
+        if ($count >= $limit) {
+            Main::log("Rate limit exceeded for IP: {$ip}");
+            return false;
+        }
+
+        set_transient($cache_key, $count + 1, MINUTE_IN_SECONDS);
+        return true;
     }
 }

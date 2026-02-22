@@ -55,6 +55,31 @@ class AdminOrders {
             echo '<p><strong>' . __('Idempotency Key:', 'ucp-for-woocommerce') . '</strong><br>';
             echo '<code>' . esc_html($idempotency_key) . '</code></p>';
         }
+
+        // Display Mapped Custom Fields
+        $mapping_raw = Settings::get('ucp_woo_field_mapping');
+        if (!empty($mapping_raw)) {
+            $mappings = array_filter(array_map('trim', explode("\n", $mapping_raw)));
+            $has_custom_fields = false;
+
+            foreach ($mappings as $line) {
+                if (strpos($line, '|') === false) continue;
+                list($ucp_key, $woo_key) = explode('|', $line, 2);
+                $ucp_key = trim($ucp_key);
+                $woo_key = trim($woo_key);
+
+                $value = $order->get_meta($woo_key);
+                if (!empty($value)) {
+                    if (!$has_custom_fields) {
+                        echo '<hr><p><strong>' . __('Mapped Fields:', 'ucp-for-woocommerce') . '</strong></p>';
+                        $has_custom_fields = true;
+                    }
+                    $display_name = str_replace(['_', '-'], ' ', ucfirst($ucp_key));
+                    echo '<p><strong>' . esc_html($display_name) . ':</strong> ' . esc_html($value) . '</p>';
+                }
+            }
+        }
+
         echo '</div>';
     }
 }
